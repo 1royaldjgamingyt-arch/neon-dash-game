@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>NEON DASH</title>
+    <meta name="description" content="High-octane 3D endless runner game set in a vibrant futuristic railway metropolis." />
+    <meta property="og:title" content="NEON DASH" />
+    <meta property="og:description" content="High-octane 3D endless runner game set in a vibrant futuristic railway metropolis." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#070913" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-state="title">
+    <div id="game-container" role="main" aria-label="NEON DASH Game Shell">
+      <!-- 2D Canvas Viewport (Pseudo-3D Projection) -->
+      <canvas id="game-canvas" width="480" height="854" aria-label="Neon Dash Game Canvas" data-testid="game-canvas"></canvas>
+
+      <!-- Heads-Up Display (Active during gameplay) -->
+      <header id="hud-overlay" aria-label="Game HUD">
+        <div class="hud-cluster">
+          <div class="hud-score-card">
+            <span class="hud-kicker">Score</span>
+            <span id="hud-score" class="hud-hero-value">0</span>
+            <div class="hud-sub-stats">
+              <div class="hud-chip">
+                <svg class="hud-chip-icon" viewBox="0 0 24 24">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <span id="hud-coins">0</span>
+              </div>
+              <div class="hud-chip best">
+                <span>BEST</span>
+                <span id="hud-best-chip">0</span>
+              </div>
+              <div class="hud-chip dist">
+                <span id="hud-distance">0m</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Power-ups Bar -->
+          <div id="hud-powerups" class="hud-powerups-bar" aria-label="Active Power-ups">
+            <div id="powerup-magnet" class="powerup-pill magnet" style="display: none;">
+              <span class="powerup-icon">🧲</span>
+              <div class="powerup-meter">
+                <div id="meter-magnet" class="powerup-fill"></div>
+              </div>
+            </div>
+            <div id="powerup-shield" class="powerup-pill shield" style="display: none;">
+              <span class="powerup-icon">🛡️</span>
+              <div class="powerup-meter">
+                <div id="meter-shield" class="powerup-fill"></div>
+              </div>
+            </div>
+            <div id="powerup-boost" class="powerup-pill boost" style="display: none;">
+              <span class="powerup-icon">⚡</span>
+              <div class="powerup-meter">
+                <div id="meter-boost" class="powerup-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-cluster" style="align-items: flex-end;">
+          <div class="hud-actions">
+            <button id="btn-touch-toggle" class="hud-icon-btn" aria-label="Toggle Touch Controls" title="Toggle On-Screen Buttons">
+              <svg viewBox="0 0 24 24">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+            </button>
+            <button id="btn-audio" class="hud-icon-btn" aria-label="Mute Audio" title="Mute Audio (M)">
+              <svg id="icon-sound-on" viewBox="0 0 24 24">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+              <svg id="icon-sound-off" viewBox="0 0 24 24" style="display: none;">
+                <line x1="1" y1="1" x2="23" y2="23" />
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              </svg>
+            </button>
+            <button id="btn-pause" class="hud-icon-btn" aria-label="Pause Game" title="Pause Game (P / Esc)">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+              </svg>
+            </button>
+          </div>
+          <div id="hud-speed" class="hud-speed-badge" style="margin-top: 6px;">
+            <span>SPD</span>
+            <span id="hud-speed-val">1.0x</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Mobile On-Screen Controls (Alternative to swiping) -->
+      <nav id="touch-controls" aria-label="Mobile Touch Controls">
+        <div class="touch-group">
+          <button id="btn-ctrl-left" class="touch-btn" aria-label="Move Lane Left">
+            <svg viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            <span class="touch-btn-label">LEFT</span>
+          </button>
+          <button id="btn-ctrl-right" class="touch-btn" aria-label="Move Lane Right">
+            <svg viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            <span class="touch-btn-label">RIGHT</span>
+          </button>
+        </div>
+        <div class="touch-group">
+          <button id="btn-ctrl-jump" class="touch-btn jump-btn" aria-label="Jump Over Obstacle">
+            <svg viewBox="0 0 24 24">
+              <polyline points="18 15 12 9 6 15" />
+            </svg>
+            <span class="touch-btn-label">JUMP</span>
+          </button>
+          <button id="btn-ctrl-slide" class="touch-btn slide-btn" aria-label="Slide Under Obstacle">
+            <svg viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            <span class="touch-btn-label">SLIDE</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Title Screen Overlay -->
+      <section id="title-screen" class="modal-screen" aria-label="Title Screen">
+        <div class="modal-card">
+          <div class="logo-wrapper">
+            <svg width="270" height="74" viewBox="0 0 270 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="neonGlow" x1="0" y1="0" x2="270" y2="74" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#00F3FF"/>
+                  <stop offset="0.4" stop-color="#FF007F"/>
+                  <stop offset="0.8" stop-color="#FFB800"/>
+                  <stop offset="1" stop-color="#00FF88"/>
+                </linearGradient>
+              </defs>
+              <text x="135" y="44" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="900" font-size="36" letter-spacing="4" fill="url(#neonGlow)" stroke="#00F3FF" stroke-width="1.2">
+                NEON DASH
+              </text>
+              <path d="M20 58 L250 58" stroke="#00F3FF" stroke-width="2.5" stroke-dasharray="8 4" />
+            </svg>
+          </div>
+          <p class="title-tagline">3D RAILWAY CYBER RUNNER</p>
+
+          <div class="title-stats-panel">
+            <div class="stat-item">
+              <span class="stat-kicker">BEST SCORE</span>
+              <span id="title-best-score" class="stat-number magenta">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-kicker">TOTAL COINS</span>
+              <span id="title-total-coins" class="stat-number gold">0</span>
+            </div>
+          </div>
+
+          <button id="btn-start" class="btn-primary" data-start="true" aria-label="Start Game">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            START RUN
+          </button>
+
+          <p class="control-hint-line">
+            Swipe or Arrow Keys / WASD · Tap or On-Screen Controls
+          </p>
+        </div>
+      </section>
+
+      <!-- Pause Menu Modal -->
+      <section id="pause-modal" class="modal-screen" aria-label="Pause Menu">
+        <div class="modal-card">
+          <h2 class="modal-title">RUN PAUSED</h2>
+          <p class="modal-subtitle">SYSTEM STANDBY</p>
+
+          <div class="settings-list">
+            <div class="settings-row">
+              <span class="settings-label">Sound Effects</span>
+              <div id="toggle-sfx" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0">
+                <div class="toggle-thumb"></div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Cyber Synth Music</span>
+              <div id="toggle-music" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0">
+                <div class="toggle-thumb"></div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Touch Buttons</span>
+              <div id="toggle-touch-pad" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0">
+                <div class="toggle-thumb"></div>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-resume" class="btn-primary" aria-label="Resume Game">
+            RESUME
+          </button>
+          <button id="btn-pause-restart" class="btn-secondary" aria-label="Restart Run">
+            RESTART RUN
+          </button>
+          <button id="btn-pause-title" class="btn-secondary" aria-label="Main Menu">
+            MAIN MENU
+          </button>
+        </div>
+      </section>
+
+      <!-- Game Over Modal -->
+      <section id="gameover-modal" class="modal-screen" aria-label="Game Over Screen">
+        <div class="modal-card">
+          <h2 class="modal-title crash">CRASH DETECTED</h2>
+          <p class="modal-subtitle">RUN DIAGNOSTIC LOG</p>
+
+          <div class="gameover-stats-grid">
+            <div class="gameover-stat-box highlight">
+              <span class="stat-kicker">FINAL SCORE</span>
+              <div style="display: flex; align-items: baseline;">
+                <span id="go-score" class="stat-number">0</span>
+                <span id="go-new-best" class="new-best-badge" style="display: none;">NEW BEST!</span>
+              </div>
+            </div>
+            <div class="gameover-stat-box">
+              <span class="stat-kicker">DISTANCE</span>
+              <span id="go-distance" class="stat-number">0m</span>
+            </div>
+            <div class="gameover-stat-box">
+              <span class="stat-kicker">COINS EARNED</span>
+              <span id="go-coins" class="stat-number gold">+0</span>
+            </div>
+            <div class="gameover-stat-box">
+              <span class="stat-kicker">ALL-TIME BEST</span>
+              <span id="go-best" class="stat-number magenta">0</span>
+            </div>
+          </div>
+
+          <button id="btn-restart" class="btn-primary" data-start="true" aria-label="Restart Run">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            PLAY AGAIN
+          </button>
+          <button id="btn-menu" class="btn-secondary" aria-label="Return to Main Menu">
+            TITLE MENU
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Complete Vanilla JavaScript Game Engine -->
+    <script type="module" src="./game.js"></script>
+  </body>
+</html>

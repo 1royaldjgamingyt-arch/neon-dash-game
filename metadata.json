@@ -1,0 +1,7 @@
+{
+  "name": "NEON DASH",
+  "description": "High-octane 2D endless cyber runner game set in a futuristic neon metropolis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
