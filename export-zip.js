@@ -3,7 +3,7 @@
  * NEON DASH — Playgama & Standalone ZIP Exporter
  * Creates two ready-to-upload zip archives:
  * 1. neon-dash-playgama.zip: Production optimized build from dist/ (ready for Playgama)
- * 2. neon-dash-standalone.zip: Raw vanilla source files (index.html, style.css, game.js, rules.js)
+ * 2. neon-dash-standalone.zip: Raw vanilla source files (index.html, style.css, game.js, rules.js, playgama-bridge-config.json)
  */
 
 import fs from 'node:fs';
@@ -15,13 +15,20 @@ const DIST_DIR = path.join(ROOT_DIR, 'dist');
 
 console.log('📦 Starting NEON DASH Packaging Process...');
 
-// 1. Verify or build dist directory
-if (!fs.existsSync(DIST_DIR) || !fs.existsSync(path.join(DIST_DIR, 'index.html'))) {
-  console.log('⚡ Building production bundle with Vite...');
-  execSync('npm run build', { stdio: 'inherit' });
+// 1. Build production bundle with Vite
+console.log('⚡ Building production bundle with Vite...');
+execSync('npm run build', { stdio: 'inherit' });
+
+// 2. Ensure playgama-bridge-config.json is present in dist
+const configFile = 'playgama-bridge-config.json';
+const srcConfig = path.join(ROOT_DIR, configFile);
+const dstConfig = path.join(DIST_DIR, configFile);
+if (fs.existsSync(srcConfig)) {
+  fs.copyFileSync(srcConfig, dstConfig);
+  console.log(`📄 Copied ${configFile} to dist/`);
 }
 
-// 2. Python-based zero-dependency zip creation
+// 3. Python-based zero-dependency zip creation
 const pythonScript = `
 import os, zipfile
 
@@ -43,7 +50,7 @@ def create_zip(archive_name, base_folder, is_dir=False):
 create_zip("neon-dash-playgama.zip", "dist", is_dir=True)
 
 # 2. Standalone Vanilla Source Package
-raw_files = ["index.html", "style.css", "game.js", "rules.js"]
+raw_files = ["index.html", "style.css", "game.js", "rules.js", "playgama-bridge-config.json"]
 create_zip("neon-dash-standalone.zip", raw_files, is_dir=False)
 `;
 

@@ -426,6 +426,7 @@ export class NeonDashGame {
     // Persistent Storage & State
     this.storage = this.initStorage();
     this.state = 'title'; // 'title' | 'playing' | 'paused' | 'gameover'
+    this.isBridgeInitialized = false;
     this.audio = new SoundFX();
     this.particles = new ParticleSystem(180);
 
@@ -534,21 +535,29 @@ export class NeonDashGame {
         const b = window.bridge;
         b.initialize?.()
           ?.then(() => {
+            this.isBridgeInitialized = true;
             console.log('Playgama Bridge SDK initialized successfully');
-            // Check for cloud storage support
-            if (b.storage?.isSupported?.(b.storage?.StorageType?.PLATFORM_INTERNAL)) {
+            // Cloud storage support per official docs
+            if (b.storage?.get) {
               b.storage.get(['neon_dash_best_score', 'neon_dash_total_coins'])
                 .then((data) => {
-                  if (data && data[0]) {
-                    const cloudBest = parseInt(data[0], 10) || 0;
-                    if (cloudBest > this.storage.bestScore) {
-                      this.storage.bestScore = cloudBest;
+                  if (Array.isArray(data)) {
+                    if (data[0] !== null && data[0] !== undefined) {
+                      const cloudBest = parseInt(data[0], 10) || 0;
+                      if (cloudBest > this.storage.bestScore) this.storage.bestScore = cloudBest;
                     }
-                  }
-                  if (data && data[1]) {
-                    const cloudCoins = parseInt(data[1], 10) || 0;
-                    if (cloudCoins > this.storage.totalCoins) {
-                      this.storage.totalCoins = cloudCoins;
+                    if (data[1] !== null && data[1] !== undefined) {
+                      const cloudCoins = parseInt(data[1], 10) || 0;
+                      if (cloudCoins > this.storage.totalCoins) this.storage.totalCoins = cloudCoins;
+                    }
+                  } else if (data && typeof data === 'object') {
+                    if (data.neon_dash_best_score != null) {
+                      const cloudBest = parseInt(data.neon_dash_best_score, 10) || 0;
+                      if (cloudBest > this.storage.bestScore) this.storage.bestScore = cloudBest;
+                    }
+                    if (data.neon_dash_total_coins != null) {
+                      const cloudCoins = parseInt(data.neon_dash_total_coins, 10) || 0;
+                      if (cloudCoins > this.storage.totalCoins) this.storage.totalCoins = cloudCoins;
                     }
                   }
                   if (this.state === 'title') {
@@ -556,16 +565,32 @@ export class NeonDashGame {
                     this.titleTotalCoins.textContent = this.storage.totalCoins.toLocaleString();
                   }
                 })
-                .catch(() => {});
+                .catch((err) => {
+                  console.warn('Playgama storage.get note:', err);
+                });
             }
 
-            // Listen for ad state changes to mute/unmute audio automatically
+            // Official Playgama Bridge event: visibility_state_changed
+            if (b.game?.on) {
+              b.game.on('visibility_state_changed', (state) => {
+                if (state === 'hidden') {
+                  if (this.state === 'playing') this.setState('paused');
+                  this.audio.setMusicEnabled(false);
+                } else if (state === 'visible') {
+                  if (this.storage.music && this.state === 'playing') {
+                    this.audio.setMusicEnabled(true);
+                  }
+                }
+              });
+            }
+
+            // Official Playgama Bridge event: interstitial_state_changed
             if (b.advertisement?.on) {
               b.advertisement.on('interstitial_state_changed', (state) => {
                 if (state === 'opened') {
                   this.audio.setMuted(true);
                   if (this.state === 'playing') this.setState('paused');
-                } else if (state === 'closed') {
+                } else if (state === 'closed' || state === 'failed') {
                   if (!this.storage.muted) this.audio.setMuted(false);
                 }
               });
@@ -624,7 +649,7 @@ export class NeonDashGame {
     } catch (e) {}
 
     // Cloud storage sync if running on Playgama Bridge
-    if (typeof window !== 'undefined' && window.bridge?.storage?.set) {
+    if (this.isBridgeInitialized && typeof window !== 'undefined' && window.bridge?.storage?.set) {
       try {
         window.bridge.storage.set(
           ['neon_dash_best_score', 'neon_dash_total_coins'],
@@ -715,10 +740,14 @@ export class NeonDashGame {
       this.goBest.textContent = this.storage.bestScore.toLocaleString();
 
       // Notify Playgama Bridge if present
-      if (typeof window !== 'undefined' && window.bridge) {
+      if (this.isBridgeInitialized && typeof window !== 'undefined' && window.bridge) {
         try {
           window.bridge.game?.gameplayStop?.();
           window.bridge.advertisement?.showInterstitial?.();
+          const lb = window.bridge.leaderboards || window.bridge.leaderboard;
+          if (lb?.setScore) {
+            lb.setScore({ score: this.storage.bestScore })?.catch?.(() => {});
+          }
         } catch (e) {}
       }
     }
@@ -728,7 +757,7 @@ export class NeonDashGame {
     this.audio.ensureContext();
 
     // Notify Playgama Bridge if present
-    if (typeof window !== 'undefined' && window.bridge?.game?.gameplayStart) {
+    if (this.isBridgeInitialized && typeof window !== 'undefined' && window.bridge?.game?.gameplayStart) {
       try {
         window.bridge.game.gameplayStart();
       } catch (e) {}

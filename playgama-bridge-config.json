@@ -1,0 +1,13 @@
+{
+  "$schema": "https://bridge.playgama.com/v1/stable/schema.json",
+  "advertisement": {
+    "minimumDelayBetweenInterstitial": 60000
+  },
+  "leaderboards": [
+    {
+      "id": "best_score",
+      "type": "in_game"
+    }
+  ],
+  "platforms": {}
+}
