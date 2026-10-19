@@ -1,6 +1,6 @@
 # NEON DASH ⚡ — 3D Cyber Railway Endless Runner
 
-An arcade endless runner game built in vanilla HTML5 Canvas 2D, CSS3, and JavaScript. Inspired by the gameplay of classic mobile lane-runners, featuring a colorful 3D pseudo-perspective railway environment, cartoon streetwear runner, subway trains, hurdles, cargo crates, and power-ups. Designed specifically for modern mobile browsers (Android/iOS) and desktop platforms with full offline capability and ready for publication on Playgama.
+An arcade endless runner game built in vanilla HTML5 Canvas 2D, CSS3, and JavaScript, bundled and optimized with Vite. Inspired by the gameplay of classic mobile lane-runners, featuring a colorful 3D pseudo-perspective railway environment, cartoon streetwear runner, subway trains, hurdles, cargo crates, and power-ups. Designed specifically for modern mobile browsers (Android/iOS), desktop platforms, and immediate export & publication on **Playgama**.
 
 ---
 
@@ -38,97 +38,93 @@ An arcade endless runner game built in vanilla HTML5 Canvas 2D, CSS3, and JavaSc
   - Energetic retro-futuristic bassline and hi-hat beat.
   - Synthesized sound effects for jumps, slides, coin chimes, power-up fanfare, shield breaks, and impacts.
   - Individual SFX, music, and mute toggles with local storage persistence.
+  - Mobile audio autoplay unlock on first gesture.
 
 - **Adaptive Controls & Mobile Optimization**:
   - **Touch Swipes**: Swipe Left/Right to change lanes, Up to jump, Down to slide/roll.
   - **On-Screen Touch Buttons**: Tactile LEFT, RIGHT, JUMP, SLIDE buttons with optional toggle.
   - **Keyboard Controls**: Arrow keys or WASD, Space to Jump/Start, P or Esc to Pause, M to Mute.
   - Zero accidental zoom or scroll during gameplay (`touch-action: none`).
+  - Auto-pause when switching tabs or losing window focus.
 
 - **High-Score Persistence**:
   - Saves all-time best scores and lifetime collected coins using `localStorage`.
+  - Automatic synchronization with Playgama Cloud Storage if running inside the Playgama Bridge environment.
 
 ---
 
 ## 📁 File Structure
 
 ```text
-├── index.html       # Game shell, viewport meta, semantic DOM HUD, powerup meters, overlays
-├── style.css        # Responsive styling, neon theme, mobile touch layout, powerup meters
-├── game.js          # Pseudo-3D Canvas engine, railway renderer, runner animations, audio synth
-├── rules.js         # Decoupled core physics, collisions, powerups, and scoring logic
-├── rules.test.js    # Native Node.js unit tests (node:test)
-└── README.md        # Documentation and deployment instructions
+├── index.html            # Main HTML5 game shell, viewport meta, HUD, modals
+├── style.css             # Responsive styling, neon theme, mobile touch layout
+├── game.js               # Pseudo-3D Canvas engine, railway renderer, runner animations, audio synth
+├── rules.js              # Decoupled core physics, collisions, powerups, and scoring logic
+├── rules.test.js         # Native Node.js unit tests (node:test)
+├── vite.config.ts        # Vite configuration with relative base ('./') for standalone export
+├── package.json          # Dependencies and build/test/export scripts
+├── export-zip.js         # Automated zip packager for Playgama and standalone HTML5
+├── vercel.json           # Vercel deployment configuration
+└── README.md             # Complete project and submission documentation
 ```
 
 ---
 
-## 🚀 Running the Game Locally
+## 🚀 Development & Testing Commands
 
-NEON DASH uses pure client-side web technologies and requires no build step or backend database:
-
-### Option A: Using Python (Recommended)
-```bash
-python3 -m http.server 3000
-# Open in browser: http://localhost:3000
-```
-
-### Option B: Using Node.js `serve` or `npx`
-```bash
-npx serve . -p 3000
-```
-
-### Option C: Using Vite Dev Server
-```bash
-npm run dev
-```
-
-### Testing on a Real Android Device on Local Wi-Fi:
-1. Find your computer's local IP address (`ip addr` on Linux/macOS or `ipconfig` on Windows, e.g., `192.168.1.50`).
-2. Run `python3 -m http.server 3000 --bind 0.0.0.0`.
-3. Open Chrome or Samsung Internet on your Android device and visit `http://192.168.1.50:3000`.
+| Command | Action |
+|---|---|
+| `npm run dev` | Start local Vite development server on port 3000 |
+| `npm test` | Run unit tests for physics, collisions, and scoring (`node:test`) |
+| `npm run lint` | Type-check project with TypeScript (`tsc --noEmit`) |
+| `npm run build` | Compile optimized production bundle to `dist/` with relative paths |
+| `npm run package:zip` | Package archives (`neon-dash-playgama.zip` and `neon-dash-standalone.zip`) |
+| `npm run export` | Build + package both ZIP archives in one step |
 
 ---
 
-## 🧪 Running Unit Tests
+## 🕹️ Playgama Submission Guide
 
-The core rules, collision mathematics, power-up logic, and obstacle solvability are decoupled into `rules.js` and tested using Node's native test runner:
+NEON DASH satisfies all Playgama platform requirements:
 
+### Platform Compliance Checklist
+1. **Archive Structure**: `index.html` is located directly at the root of the ZIP file.
+2. **File Size**: The compiled `neon-dash-playgama.zip` is ~17 KB, well within the 300 MB limit (and far below the 30 MB threshold for YouTube Playables).
+3. **No External Network Dependencies**: 100% self-contained. All styles, scripts, canvas graphics, and procedural audio are local. No external CDNs, fonts, or tracking scripts that would fail offline or in restricted iframes.
+4. **Playgama Bridge Integration**: Automatically connects to `window.bridge` when available:
+   - Initializes Bridge via `bridge.initialize()`
+   - Emits `bridge.game.gameplayStart()` and `bridge.game.gameplayStop()`
+   - Displays interstitial ads on game over via `bridge.advertisement.showInterstitial()`
+   - Automatically mutes audio during ads and resumes on close
+   - Synchronizes best scores and coin totals with cloud storage
+5. **Display & Controls**:
+   - Supports touch swipes and on-screen touch buttons for mobile.
+   - Supports keyboard (Arrows/WASD/Space/P/M) for desktop.
+   - Auto-centers on desktop and fills viewport on mobile.
+   - Prevents page bounce/scrolling via `touch-action: none`.
+6. **Autoplay Audio Policy**:
+   - Web Audio context is initialized on first user interaction anywhere on the screen (`pointerdown`, `touchstart`, `keydown`).
+   - Automatically pauses game and suspends audio when document is hidden (`visibilitychange` or `blur`).
+
+### How to Export for Playgama
+Run the single export command:
 ```bash
-node --test rules.test.js
+npm run export
 ```
+This generates:
+- **`neon-dash-playgama.zip`**: The production-ready archive containing `dist/index.html` and bundled assets. Upload this ZIP directly in the Playgama Developer Portal under **Game Upload**.
+- **`neon-dash-standalone.zip`**: The raw vanilla source archive (unminified `index.html`, `style.css`, `game.js`, `rules.js`).
 
 ---
 
-## 📦 Exporting to GitHub & GitHub Pages
+## 🌐 Deploying to Vercel or GitHub Pages
 
-1. Initialize git in your local project folder:
-   ```bash
-   git init
-   git add index.html style.css game.js rules.js rules.test.js README.md
-   git commit -m "Upgrade NEON DASH: 3D Railway Runner with Cartoon Hero & Power-ups"
-   ```
+### Deploying to Vercel:
+1. Push your repository to GitHub/GitLab.
+2. Import the repository in Vercel.
+3. Vercel will automatically detect `vercel.json` and build using `vite build` with output directory `dist`.
 
-2. Push to your GitHub repository:
-   ```bash
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/neon-dash.git
-   git push -u origin main
-   ```
-
-3. Enable GitHub Pages:
-   - Go to **Settings** > **Pages**.
-   - Under **Build and deployment**, select `main` branch and `/ (root)` folder.
-   - Click **Save**. The game will be live at `https://<your-username>.github.io/neon-dash/`.
-
----
-
-## 🕹️ Playgama Submission Ready
-
-- **Zero External Dependencies**: 100% self-contained vanilla HTML5, CSS3, JavaScript.
-- **Offline Capable**: Works with no internet connection after initial download.
-- **Responsive Layout**: Designed for Android portrait mobile viewports and desktop browsers.
-- **Zipping for Submission**:
-  ```bash
-  zip -r neon-dash.zip index.html style.css game.js rules.js
-  ```
+### Deploying to GitHub Pages:
+1. Run `npm run build`.
+2. Commit `dist/` or push the project repository.
+3. In GitHub Settings > Pages, select the deployment branch (or `/dist` folder) and click Save.

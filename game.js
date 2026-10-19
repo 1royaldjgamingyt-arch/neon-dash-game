@@ -282,11 +282,15 @@ class SoundFX {
         if (this.musicStep % 2 === 0) {
           const hatOsc = this.ctx.createOscillator();
           const hatGain = this.ctx.createGain();
-          hatOsc.type = 'highpass';
+          const hatFilter = this.ctx.createBiquadFilter();
+          hatOsc.type = 'square';
+          hatFilter.type = 'highpass';
+          hatFilter.frequency.setValueAtTime(6500, t);
           hatOsc.frequency.setValueAtTime(8000, t);
           hatGain.gain.setValueAtTime(0.035, t);
           hatGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-          hatOsc.connect(hatGain);
+          hatOsc.connect(hatFilter);
+          hatFilter.connect(hatGain);
           hatGain.connect(this.musicGain);
           hatOsc.start(t);
           hatOsc.stop(t + 0.04);
@@ -506,6 +510,7 @@ export class NeonDashGame {
     this.setupEventListeners();
     this.setupTouchControls();
     this.setupSettingsToggles();
+    this.initPlaygamaBridge();
     this.handleResize();
 
     window.game = this;
@@ -518,6 +523,61 @@ export class NeonDashGame {
     }
 
     requestAnimationFrame((t) => this.loop(t));
+  }
+
+  // ==========================================================================
+  // PLAYGAMA BRIDGE SDK ADAPTER (Safe fallback if SDK is absent)
+  // ==========================================================================
+  initPlaygamaBridge() {
+    if (typeof window !== 'undefined' && window.bridge) {
+      try {
+        const b = window.bridge;
+        b.initialize?.()
+          ?.then(() => {
+            console.log('Playgama Bridge SDK initialized successfully');
+            // Check for cloud storage support
+            if (b.storage?.isSupported?.(b.storage?.StorageType?.PLATFORM_INTERNAL)) {
+              b.storage.get(['neon_dash_best_score', 'neon_dash_total_coins'])
+                .then((data) => {
+                  if (data && data[0]) {
+                    const cloudBest = parseInt(data[0], 10) || 0;
+                    if (cloudBest > this.storage.bestScore) {
+                      this.storage.bestScore = cloudBest;
+                    }
+                  }
+                  if (data && data[1]) {
+                    const cloudCoins = parseInt(data[1], 10) || 0;
+                    if (cloudCoins > this.storage.totalCoins) {
+                      this.storage.totalCoins = cloudCoins;
+                    }
+                  }
+                  if (this.state === 'title') {
+                    this.titleBestScore.textContent = this.storage.bestScore.toLocaleString();
+                    this.titleTotalCoins.textContent = this.storage.totalCoins.toLocaleString();
+                  }
+                })
+                .catch(() => {});
+            }
+
+            // Listen for ad state changes to mute/unmute audio automatically
+            if (b.advertisement?.on) {
+              b.advertisement.on('interstitial_state_changed', (state) => {
+                if (state === 'opened') {
+                  this.audio.setMuted(true);
+                  if (this.state === 'playing') this.setState('paused');
+                } else if (state === 'closed') {
+                  if (!this.storage.muted) this.audio.setMuted(false);
+                }
+              });
+            }
+          })
+          ?.catch((err) => {
+            console.warn('Playgama Bridge initialization info:', err);
+          });
+      } catch (e) {
+        console.warn('Playgama Bridge init skipped:', e);
+      }
+    }
   }
 
   // ==========================================================================
@@ -562,6 +622,16 @@ export class NeonDashGame {
       localStorage.setItem('neon_dash_music', this.storage.music.toString());
       localStorage.setItem('neon_dash_touch_buttons', this.storage.touchButtons.toString());
     } catch (e) {}
+
+    // Cloud storage sync if running on Playgama Bridge
+    if (typeof window !== 'undefined' && window.bridge?.storage?.set) {
+      try {
+        window.bridge.storage.set(
+          ['neon_dash_best_score', 'neon_dash_total_coins'],
+          [this.storage.bestScore.toString(), this.storage.totalCoins.toString()]
+        );
+      } catch (e) {}
+    }
   }
 
   // ==========================================================================
@@ -643,11 +713,27 @@ export class NeonDashGame {
       this.goDistance.textContent = `${Math.floor(this.distance)}m`;
       this.goCoins.textContent = `+${this.runCoins}`;
       this.goBest.textContent = this.storage.bestScore.toLocaleString();
+
+      // Notify Playgama Bridge if present
+      if (typeof window !== 'undefined' && window.bridge) {
+        try {
+          window.bridge.game?.gameplayStop?.();
+          window.bridge.advertisement?.showInterstitial?.();
+        } catch (e) {}
+      }
     }
   }
 
   startGame() {
     this.audio.ensureContext();
+
+    // Notify Playgama Bridge if present
+    if (typeof window !== 'undefined' && window.bridge?.game?.gameplayStart) {
+      try {
+        window.bridge.game.gameplayStart();
+      } catch (e) {}
+    }
+
     this.distance = 0;
     this.coins = 0;
     this.runCoins = 0;
@@ -821,6 +907,43 @@ export class NeonDashGame {
         this.toggleTouchButtons();
       });
     }
+
+    // Unmute & unlock Web Audio on first user interaction anywhere
+    const unlockAudio = () => {
+      this.audio.ensureContext();
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio, { passive: true });
+
+    // Handle tab visibility changes (Playgama / mobile app switching compliance)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (this.state === 'playing') {
+          this.setState('paused');
+        }
+        this.audio.setMusicEnabled(false);
+      } else {
+        if (this.storage.music && this.state === 'playing') {
+          this.audio.setMusicEnabled(true);
+        }
+      }
+    });
+
+    // Handle window blur (user clicks outside iframe or switches window)
+    window.addEventListener('blur', () => {
+      if (this.state === 'playing') {
+        this.setState('paused');
+      }
+    });
+
+    // Mobile orientation change listener
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.handleResize(), 120);
+    });
   }
 
   setupTouchControls() {

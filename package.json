@@ -1,13 +1,16 @@
 {
-  "name": "react-example",
+  "name": "neon-dash",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "test": "node --test rules.test.js",
+    "package:zip": "node export-zip.js",
+    "export": "npm run build && node export-zip.js",
+    "clean": "rm -rf dist server.js *.zip",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
