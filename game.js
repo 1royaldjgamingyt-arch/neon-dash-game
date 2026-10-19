@@ -537,6 +537,12 @@ export class NeonDashGame {
           ?.then(() => {
             this.isBridgeInitialized = true;
             console.log('Playgama Bridge SDK initialized successfully');
+            if (b.platform?.sendMessage) {
+  requestAnimationFrame(() => {
+    b.platform.sendMessage('game_ready');
+    console.log('Playgama game_ready message sent');
+  });
+            }
             // Cloud storage support per official docs
             if (b.storage?.get) {
               b.storage.get(['neon_dash_best_score', 'neon_dash_total_coins'])
