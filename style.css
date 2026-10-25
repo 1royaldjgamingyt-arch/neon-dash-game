@@ -235,104 +235,7 @@ body[data-state="gameover"] #hud-overlay {
   fill: none;
 }
 
-/* --------------------------------------------------------------------------
-   Mobile On-Screen Controls (Optimized for Android Mobile Thumbs)
-   -------------------------------------------------------------------------- */
-#touch-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 12px 14px 22px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  z-index: 12;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
 
-body[data-state="title"] #touch-controls,
-body[data-state="paused"] #touch-controls,
-body[data-state="gameover"] #touch-controls {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(20px);
-}
-
-.touch-group {
-  display: flex;
-  gap: 12px;
-  pointer-events: auto;
-}
-
-.touch-btn {
-  width: 66px;
-  height: 66px;
-  border-radius: 18px;
-  background: rgba(8, 14, 28, 0.85);
-  border: 2px solid var(--border-cyan);
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(0, 243, 255, 0.2);
-  touch-action: none;
-  transition: transform 0.08s ease, background 0.08s ease, border-color 0.08s ease;
-}
-
-.touch-btn.jump-btn {
-  border-color: var(--neon-magenta);
-  background: rgba(30, 8, 22, 0.85);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(255, 0, 127, 0.2);
-}
-
-.touch-btn.slide-btn {
-  border-color: var(--neon-amber);
-  background: rgba(30, 20, 8, 0.85);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(255, 184, 0, 0.2);
-}
-
-.touch-btn:active,
-.touch-btn.active {
-  transform: scale(0.9);
-  background: rgba(0, 243, 255, 0.45);
-  border-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan);
-}
-
-.touch-btn.jump-btn:active,
-.touch-btn.jump-btn.active {
-  background: rgba(255, 0, 127, 0.45);
-  border-color: var(--neon-magenta);
-  box-shadow: var(--glow-magenta);
-}
-
-.touch-btn.slide-btn:active,
-.touch-btn.slide-btn.active {
-  background: rgba(255, 184, 0, 0.45);
-  border-color: var(--neon-amber);
-  box-shadow: var(--glow-amber);
-}
-
-.touch-btn svg {
-  width: 26px;
-  height: 26px;
-  stroke: currentColor;
-  stroke-width: 2.6;
-  fill: none;
-}
-
-.touch-btn-label {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  margin-top: 2px;
-  opacity: 0.9;
-}
 
 /* --------------------------------------------------------------------------
    Modal & Overlay Screens (Title, Pause, Game Over)
@@ -357,9 +260,19 @@ body[data-state="gameover"] #touch-controls {
 
 body[data-state="title"] #title-screen,
 body[data-state="paused"] #pause-modal,
-body[data-state="gameover"] #gameover-modal {
+body[data-state="gameover"] #gameover-modal,
+body[data-state="revive"] #revive-modal {
   opacity: 1;
   pointer-events: auto;
+}
+
+#tutorial-modal.active,
+#skins-modal.active,
+#revive-modal.active,
+.modal-screen.active,
+.modal-screen[style*="display: flex"] {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .modal-card {
@@ -707,4 +620,703 @@ body[data-state="gameover"] #gameover-modal {
   background: #ffb800;
   box-shadow: 0 0 6px #ffb800;
 }
+
+.powerup-pill.double {
+  border-color: rgba(255, 0, 127, 0.7);
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.35);
+}
+
+.powerup-pill.double .powerup-fill {
+  background: #ff007f;
+  box-shadow: 0 0 6px #ff007f;
+}
+
+.powerup-time {
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   HUD Combo Streaks Chip
+   -------------------------------------------------------------------------- */
+.hud-combo-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(12, 18, 38, 0.92);
+  border: 1.5px solid var(--neon-cyan);
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-top: 4px;
+  box-shadow: 0 0 14px rgba(0, 243, 255, 0.35);
+  animation: comboPulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes comboPulse {
+  from {
+    box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+  }
+  to {
+    box-shadow: 0 0 18px rgba(255, 0, 127, 0.6);
+  }
+}
+
+.hud-combo-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hud-combo-mult {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.hud-combo-mult.high {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 10px var(--neon-magenta);
+}
+
+.hud-combo-meter {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hud-combo-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+  box-shadow: 0 0 6px var(--neon-cyan);
+  transition: width 0.08s linear;
+}
+
+/* --------------------------------------------------------------------------
+   Floating Toast Notifications (Missions, Milestones, Zones)
+   -------------------------------------------------------------------------- */
+.toast-banner {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(7, 11, 25, 0.96);
+  border: 1.5px solid var(--neon-cyan);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.8), var(--glow-cyan);
+  border-radius: 30px;
+  padding: 8px 18px;
+  animation: toastSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+  max-width: 90%;
+}
+
+@keyframes toastSlideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.toast-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.toast-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.toast-title {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+}
+
+.toast-desc {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   HUD Mission & Zone Badges
+   -------------------------------------------------------------------------- */
+.hud-mission-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(8, 12, 26, 0.88);
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-top: 4px;
+  max-width: 175px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.hud-mission-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-mission-meter {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hud-mission-fill {
+  height: 100%;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 6px var(--neon-cyan);
+  transition: width 0.2s ease;
+}
+
+.hud-zone-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(10, 16, 32, 0.85);
+  border: 1px solid rgba(255, 0, 127, 0.45);
+  border-radius: 8px;
+  padding: 3px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 8px rgba(255, 0, 127, 0.3);
+}
+
+.hud-zone-kicker {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--neon-magenta);
+}
+
+#hud-zone-name {
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+/* --------------------------------------------------------------------------
+   Missions Panel (Title Screen & Game Over)
+   -------------------------------------------------------------------------- */
+.missions-panel {
+  width: 100%;
+  background: rgba(12, 18, 38, 0.7);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 6px 0 10px;
+}
+
+.missions-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.missions-panel-title {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  color: var(--neon-cyan);
+}
+
+.missions-panel-tag {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--neon-amber);
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mission-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6, 10, 22, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.mission-row.completed {
+  border-color: rgba(0, 255, 136, 0.45);
+  background: rgba(6, 26, 16, 0.75);
+}
+
+.mission-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.mission-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.mission-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mission-title {
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mission-progress-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.mission-row.completed .mission-progress-num {
+  color: var(--neon-lime);
+}
+
+.mission-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mission-fill {
+  height: 100%;
+  background: var(--neon-cyan);
+  border-radius: 2px;
+}
+
+.mission-row.completed .mission-fill {
+  background: var(--neon-lime);
+}
+
+.mission-reward {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--neon-amber);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Milestone Progress Card
+   -------------------------------------------------------------------------- */
+.milestone-card {
+  width: 100%;
+  background: rgba(12, 18, 38, 0.7);
+  border: 1px solid rgba(255, 0, 127, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.milestone-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+
+.milestone-kicker {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--neon-magenta);
+}
+
+.milestone-target {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.milestone-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.milestone-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Quick Action Buttons (Title Screen & Pause)
+   -------------------------------------------------------------------------- */
+.title-quick-actions,
+.pause-quick-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin: 6px 0;
+}
+
+.btn-quick {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(14, 22, 48, 0.85);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  color: #ffffff;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-quick:active {
+  transform: scale(0.96);
+  background: rgba(0, 243, 255, 0.2);
+  border-color: var(--neon-cyan);
+}
+
+/* --------------------------------------------------------------------------
+   Second Chance Revive Modal
+   -------------------------------------------------------------------------- */
+.revive-card {
+  border-color: var(--neon-amber) !important;
+  box-shadow: 0 0 40px rgba(255, 184, 0, 0.3), 0 0 80px rgba(0, 0, 0, 0.9) !important;
+  text-align: center;
+}
+
+.revive-pulse-badge {
+  display: inline-block;
+  background: rgba(255, 184, 0, 0.15);
+  border: 1px solid var(--neon-amber);
+  color: var(--neon-amber);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  animation: pulseAmber 1.2s infinite alternate;
+}
+
+@keyframes pulseAmber {
+  from {
+    box-shadow: 0 0 6px rgba(255, 184, 0, 0.4);
+  }
+  to {
+    box-shadow: 0 0 16px rgba(255, 184, 0, 0.8);
+  }
+}
+
+.revive-timer-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 14px 0 16px;
+}
+
+.revive-countdown-circle {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.revive-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.revive-bg-ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 7;
+}
+
+.revive-fg-ring {
+  fill: none;
+  stroke: var(--neon-amber);
+  stroke-width: 7;
+  stroke-dasharray: 264;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.revive-number {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--neon-amber);
+  text-shadow: 0 0 12px rgba(255, 184, 0, 0.8);
+}
+
+.revive-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.revive-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6) !important;
+}
+
+.revive-btn.ad {
+  background: linear-gradient(135deg, var(--neon-cyan), #0284c7) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.6) !important;
+}
+
+.revive-skip-btn {
+  opacity: 0.75;
+}
+
+/* --------------------------------------------------------------------------
+   Tutorial Modal
+   -------------------------------------------------------------------------- */
+.tutorial-card {
+  max-width: 420px;
+}
+
+.tutorial-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 16px;
+  width: 100%;
+}
+
+.tutorial-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(10, 16, 36, 0.85);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.tutorial-icon {
+  font-size: 20px;
+  width: 44px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tutorial-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tutorial-text strong {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: var(--neon-cyan);
+}
+
+.tutorial-text span {
+  font-size: 11px;
+  color: #cbd5e1;
+  line-height: 1.3;
+}
+
+/* --------------------------------------------------------------------------
+   Skins Shop Modal
+   -------------------------------------------------------------------------- */
+.skins-card {
+  max-width: 440px;
+}
+
+.skins-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.skins-balance-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(10, 16, 32, 0.9);
+  border: 1.5px solid var(--neon-amber);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--neon-amber);
+  box-shadow: 0 0 12px rgba(255, 184, 0, 0.4);
+}
+
+.skins-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-height: 52vh;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  padding-right: 4px;
+}
+
+.skin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 16, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.skin-item.equipped {
+  border-color: var(--neon-cyan);
+  background: rgba(0, 243, 255, 0.12);
+  box-shadow: 0 0 14px rgba(0, 243, 255, 0.35);
+}
+
+.skin-preview-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.skin-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 10px;
+}
+
+.skin-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.skin-desc {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.skin-action-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+}
+
+.skin-action-btn.equipped {
+  background: rgba(0, 243, 255, 0.25);
+  color: var(--neon-cyan);
+  border: 1px solid var(--neon-cyan);
+  cursor: default;
+}
+
+.skin-action-btn.equip {
+  background: #ffffff;
+  color: #070913;
+}
+
+.skin-action-btn.unlock {
+  background: linear-gradient(135deg, var(--neon-amber), #ea580c);
+  color: #000000;
+  box-shadow: 0 0 10px rgba(255, 184, 0, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   Game Over Missions Box
+   -------------------------------------------------------------------------- */
+.go-missions-box {
+  width: 100%;
+  background: rgba(12, 18, 38, 0.75);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 10px 0 12px;
+}
+
+.go-missions-title {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--neon-cyan);
+  margin-bottom: 6px;
+}
+
 

@@ -21,6 +21,15 @@
       <!-- 2D Canvas Viewport (Pseudo-3D Projection) -->
       <canvas id="game-canvas" width="480" height="854" aria-label="Neon Dash Game Canvas" data-testid="game-canvas"></canvas>
 
+      <!-- Floating Achievement & Zone Toast Notification -->
+      <div id="toast-banner" class="toast-banner" style="display: none;">
+        <span id="toast-icon" class="toast-icon">⚡</span>
+        <div class="toast-body">
+          <span id="toast-title" class="toast-title">MISSION COMPLETE</span>
+          <span id="toast-desc" class="toast-desc">+50 Bonus Coins Earned!</span>
+        </div>
+      </div>
+
       <!-- Heads-Up Display (Active during gameplay) -->
       <header id="hud-overlay" aria-label="Game HUD">
         <div class="hud-cluster">
@@ -44,24 +53,56 @@
             </div>
           </div>
 
-          <!-- Active Power-ups Bar -->
+          <!-- Active Mission Tracker Chip in HUD -->
+          <div id="hud-mission-chip" class="hud-mission-chip" aria-label="Active Mission">
+            <div class="hud-mission-header">
+              <span id="hud-mission-icon">🪙</span>
+              <span id="hud-mission-title">Coins: 0/20</span>
+            </div>
+            <div class="hud-mission-meter">
+              <div id="hud-mission-fill" class="hud-mission-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Active Combo Streak Chip in HUD -->
+          <div id="hud-combo-chip" class="hud-combo-chip" style="display: none;" aria-label="Coin Combo">
+            <div class="hud-combo-header">
+              <span class="hud-combo-icon">🔥</span>
+              <span id="hud-combo-mult" class="hud-combo-mult">x2 COMBO</span>
+            </div>
+            <div class="hud-combo-meter">
+              <div id="hud-combo-fill" class="hud-combo-fill" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Active Power-ups Bar with clean countdown timers -->
           <div id="hud-powerups" class="hud-powerups-bar" aria-label="Active Power-ups">
             <div id="powerup-magnet" class="powerup-pill magnet" style="display: none;">
               <span class="powerup-icon">🧲</span>
+              <span id="time-magnet" class="powerup-time">8s</span>
               <div class="powerup-meter">
                 <div id="meter-magnet" class="powerup-fill"></div>
               </div>
             </div>
             <div id="powerup-shield" class="powerup-pill shield" style="display: none;">
               <span class="powerup-icon">🛡️</span>
+              <span class="powerup-time">1 HIT</span>
               <div class="powerup-meter">
-                <div id="meter-shield" class="powerup-fill"></div>
+                <div id="meter-shield" class="powerup-fill" style="width: 100%;"></div>
               </div>
             </div>
             <div id="powerup-boost" class="powerup-pill boost" style="display: none;">
               <span class="powerup-icon">⚡</span>
+              <span id="time-boost" class="powerup-time">4s</span>
               <div class="powerup-meter">
                 <div id="meter-boost" class="powerup-fill"></div>
+              </div>
+            </div>
+            <div id="powerup-double" class="powerup-pill double" style="display: none;">
+              <span class="powerup-icon">🪙</span>
+              <span id="time-double" class="powerup-time">8s</span>
+              <div class="powerup-meter">
+                <div id="meter-double" class="powerup-fill"></div>
               </div>
             </div>
           </div>
@@ -69,12 +110,6 @@
 
         <div class="hud-cluster" style="align-items: flex-end;">
           <div class="hud-actions">
-            <button id="btn-touch-toggle" class="hud-icon-btn" aria-label="Toggle Touch Controls" title="Toggle On-Screen Buttons">
-              <svg viewBox="0 0 24 24">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                <line x1="12" y1="18" x2="12.01" y2="18" />
-              </svg>
-            </button>
             <button id="btn-audio" class="hud-icon-btn" aria-label="Mute Audio" title="Mute Audio (M)">
               <svg id="icon-sound-on" viewBox="0 0 24 24">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -92,48 +127,20 @@
               </svg>
             </button>
           </div>
-          <div id="hud-speed" class="hud-speed-badge" style="margin-top: 6px;">
+          <div id="hud-zone-badge" class="hud-zone-badge">
+            <span class="hud-zone-kicker">ZONE 1</span>
+            <span id="hud-zone-name">METRO</span>
+          </div>
+          <div id="hud-speed" class="hud-speed-badge" style="margin-top: 4px;">
             <span>SPD</span>
             <span id="hud-speed-val">1.0x</span>
           </div>
         </div>
       </header>
 
-      <!-- Mobile On-Screen Controls (Alternative to swiping) -->
-      <nav id="touch-controls" aria-label="Mobile Touch Controls">
-        <div class="touch-group">
-          <button id="btn-ctrl-left" class="touch-btn" aria-label="Move Lane Left">
-            <svg viewBox="0 0 24 24">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            <span class="touch-btn-label">LEFT</span>
-          </button>
-          <button id="btn-ctrl-right" class="touch-btn" aria-label="Move Lane Right">
-            <svg viewBox="0 0 24 24">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-            <span class="touch-btn-label">RIGHT</span>
-          </button>
-        </div>
-        <div class="touch-group">
-          <button id="btn-ctrl-jump" class="touch-btn jump-btn" aria-label="Jump Over Obstacle">
-            <svg viewBox="0 0 24 24">
-              <polyline points="18 15 12 9 6 15" />
-            </svg>
-            <span class="touch-btn-label">JUMP</span>
-          </button>
-          <button id="btn-ctrl-slide" class="touch-btn slide-btn" aria-label="Slide Under Obstacle">
-            <svg viewBox="0 0 24 24">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-            <span class="touch-btn-label">SLIDE</span>
-          </button>
-        </div>
-      </nav>
-
       <!-- Title Screen Overlay -->
       <section id="title-screen" class="modal-screen" aria-label="Title Screen">
-        <div class="modal-card">
+        <div class="modal-card title-card">
           <div class="logo-wrapper">
             <svg width="270" height="74" viewBox="0 0 270 74" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -163,6 +170,28 @@
             </div>
           </div>
 
+          <!-- Missions Drawer Panel -->
+          <div class="missions-panel">
+            <div class="missions-panel-header">
+              <span class="missions-panel-title">⚡ MISSIONS & REWARDS</span>
+              <span class="missions-panel-tag">COIN BOUNTY</span>
+            </div>
+            <div id="title-missions-list" class="missions-list">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+
+          <!-- Milestone Progress Bar -->
+          <div class="milestone-card">
+            <div class="milestone-info">
+              <span class="milestone-kicker">NEXT MILESTONE</span>
+              <span id="milestone-label" class="milestone-target">1,000 PTS (+30🪙)</span>
+            </div>
+            <div class="milestone-track">
+              <div id="milestone-fill" class="milestone-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
           <button id="btn-start" class="btn-primary" data-start="true" aria-label="Start Game">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="5 3 19 12 5 21 5 3"/>
@@ -170,9 +199,117 @@
             START RUN
           </button>
 
+          <!-- Quick Action Buttons -->
+          <div class="title-quick-actions">
+            <button id="btn-skins-shop" class="btn-quick" aria-label="Cyber Suits Shop">
+              <span>👕 SUITS</span>
+            </button>
+            <button id="btn-tutorial" class="btn-quick" aria-label="How to Play Tutorial">
+              <span>❓ HOW TO PLAY</span>
+            </button>
+          </div>
+
           <p class="control-hint-line">
-            Swipe or Arrow Keys / WASD · Tap or On-Screen Controls
+            Swipe to Move, Jump & Slide · Arrow Keys / WASD
           </p>
+        </div>
+      </section>
+
+      <!-- Second Chance Revive Modal -->
+      <section id="revive-modal" class="modal-screen" aria-label="Second Chance Revive" style="display: none;">
+        <div class="modal-card revive-card">
+          <div class="revive-pulse-badge">⚡ SECOND CHANCE</div>
+          <h2 class="modal-title warning">SYSTEM OVERLOAD</h2>
+          <p class="modal-subtitle">REBOOT NEON RUNNER SUIT?</p>
+
+          <div class="revive-timer-wrapper">
+            <div class="revive-countdown-circle">
+              <svg class="revive-svg" viewBox="0 0 100 100">
+                <circle class="revive-bg-ring" cx="50" cy="50" r="42" />
+                <circle id="revive-progress-ring" class="revive-fg-ring" cx="50" cy="50" r="42" />
+              </svg>
+              <span id="revive-countdown-text" class="revive-number">5</span>
+            </div>
+          </div>
+
+          <div class="revive-button-group">
+            <button id="btn-revive-ad" class="btn-primary revive-btn ad" style="display: none;">
+              <span class="btn-icon">📺</span> REVIVE (WATCH AD)
+            </button>
+            <button id="btn-revive-coins" class="btn-primary revive-btn coins">
+              <span class="btn-icon">🪙</span> REVIVE (50 COINS)
+            </button>
+            <button id="btn-revive-skip" class="btn-secondary revive-skip-btn">
+              GIVE UP
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- How to Play / Tutorial Modal -->
+      <section id="tutorial-modal" class="modal-screen" aria-label="How to Play Tutorial" style="display: none;">
+        <div class="modal-card tutorial-card">
+          <h2 class="modal-title">HOW TO PLAY</h2>
+          <p class="modal-subtitle">MASTER THE RAILWAY TRACKS</p>
+
+          <div class="tutorial-grid">
+            <div class="tutorial-item">
+              <div class="tutorial-icon">⬅️ ➡️</div>
+              <div class="tutorial-text">
+                <strong>SWIPE LEFT / RIGHT</strong>
+                <span>Switch between the 3 railway lanes</span>
+              </div>
+            </div>
+            <div class="tutorial-item">
+              <div class="tutorial-icon">⬆️</div>
+              <div class="tutorial-text">
+                <strong>SWIPE UP</strong>
+                <span>Jump over hurdles and railway barriers</span>
+              </div>
+            </div>
+            <div class="tutorial-item">
+              <div class="tutorial-icon">⬇️</div>
+              <div class="tutorial-text">
+                <strong>SWIPE DOWN</strong>
+                <span>Slide under laser beams and tunnel gantries</span>
+              </div>
+            </div>
+            <div class="tutorial-item">
+              <div class="tutorial-icon">🧲 🛡️ ⚡ 🪙</div>
+              <div class="tutorial-text">
+                <strong>CYBER POWER-UPS & COMBOS</strong>
+                <span>Magnet attracts coins · Shield absorbs 1 hit · Boost smashes obstacles · 2x Coins & Combo streaks multiply score!</span>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-close-tutorial" class="btn-primary" aria-label="Close Tutorial">
+            GOT IT! LET'S RUN
+          </button>
+        </div>
+      </section>
+
+      <!-- Skins Shop Modal -->
+      <section id="skins-modal" class="modal-screen" aria-label="Cyber Suits Shop" style="display: none;">
+        <div class="modal-card skins-card">
+          <div class="skins-header-row">
+            <div>
+              <h2 class="modal-title">CYBER SUITS</h2>
+              <p class="modal-subtitle">CHOOSE YOUR LOOK</p>
+            </div>
+            <div class="skins-balance-badge">
+              <span>🪙</span>
+              <span id="skins-coins-display">0</span>
+            </div>
+          </div>
+
+          <div id="skins-grid-container" class="skins-grid">
+            <!-- Dynamically populated -->
+          </div>
+
+          <button id="btn-close-skins" class="btn-secondary" aria-label="Close Skins Shop">
+            CLOSE SHOP
+          </button>
         </div>
       </section>
 
@@ -195,12 +332,6 @@
                 <div class="toggle-thumb"></div>
               </div>
             </div>
-            <div class="settings-row">
-              <span class="settings-label">Touch Buttons</span>
-              <div id="toggle-touch-pad" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0">
-                <div class="toggle-thumb"></div>
-              </div>
-            </div>
           </div>
 
           <button id="btn-resume" class="btn-primary" aria-label="Resume Game">
@@ -209,6 +340,14 @@
           <button id="btn-pause-restart" class="btn-secondary" aria-label="Restart Run">
             RESTART RUN
           </button>
+          <div class="pause-quick-row">
+            <button id="btn-pause-skins" class="btn-quick" aria-label="Change Skin">
+              👕 SUITS
+            </button>
+            <button id="btn-pause-tutorial" class="btn-quick" aria-label="Tutorial">
+              ❓ HELP
+            </button>
+          </div>
           <button id="btn-pause-title" class="btn-secondary" aria-label="Main Menu">
             MAIN MENU
           </button>
@@ -217,7 +356,7 @@
 
       <!-- Game Over Modal -->
       <section id="gameover-modal" class="modal-screen" aria-label="Game Over Screen">
-        <div class="modal-card">
+        <div class="modal-card gameover-card">
           <h2 class="modal-title crash">CRASH DETECTED</h2>
           <p class="modal-subtitle">RUN DIAGNOSTIC LOG</p>
 
@@ -234,12 +373,24 @@
               <span id="go-distance" class="stat-number">0m</span>
             </div>
             <div class="gameover-stat-box">
-              <span class="stat-kicker">COINS EARNED</span>
+              <span class="stat-kicker">COINS COLLECTED</span>
               <span id="go-coins" class="stat-number gold">+0</span>
             </div>
             <div class="gameover-stat-box">
               <span class="stat-kicker">ALL-TIME BEST</span>
               <span id="go-best" class="stat-number magenta">0</span>
+            </div>
+            <div class="gameover-stat-box">
+              <span class="stat-kicker">MAX COMBO</span>
+              <span id="go-combo" class="stat-number cyan">x1</span>
+            </div>
+          </div>
+
+          <!-- Run Mission Progress Card -->
+          <div class="go-missions-box">
+            <div class="go-missions-title">⚡ MISSION PROGRESS</div>
+            <div id="go-missions-list" class="missions-list">
+              <!-- Dynamically populated -->
             </div>
           </div>
 
